@@ -27,6 +27,28 @@ Game.Play.prototype = {
   create: function() {
     this.game.world.setBounds(0, 0 ,Game.w ,Game.h);
 
+
+    this.shapeSprite = this.game.add.sprite(Game.w/2, Game.h/2, 'shapes');
+    this.shapeSprite.anchor.setTo(0.5, 0.5);
+
+    this.shapes = this.game.add.group();
+
+    // console.log(this.shapeSprite.animations.frameTotal);
+
+    Shape = function(game, frame) {
+      Phaser.Sprite.call(this, game, Game.w/4+(i*42), 200, 'shapes', frame);
+    };
+
+    Shape.prototype = Object.create(Phaser.Sprite.prototype);
+    Shape.prototype.constructor = Shape;
+
+    //Create Shapes
+    for(var i = 1; i < this.shapeSprite.animations.frameTotal; i++) {
+      this.shapes.add(new Shape(game,i));
+    }
+
+
+
     // // Music
     // this.music = this.game.add.sound('music');
     // this.music.volume = 0.5;

@@ -15,7 +15,7 @@ Game.Menu.prototype =  {
 
         // Start Message
 
-        var clickText = this.game.add.bitmapText(Game.w/2, Game.h/2-50, 'minecraftia', '~click to start~', 24); 
+        var clickText = this.game.add.bitmapText(Game.w/2-128, Game.h/2+128, 'minecraftia', '~click to start~', 24); 
 
     },
     update: function() {

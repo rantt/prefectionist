@@ -28,24 +28,45 @@ Game.Play.prototype = {
     this.game.world.setBounds(0, 0 ,Game.w ,Game.h);
 
 
-    this.shapeSprite = this.game.add.sprite(Game.w/2, Game.h/2, 'shapes');
-    this.shapeSprite.anchor.setTo(0.5, 0.5);
+    // this.shapeSprite = this.game.add.sprite(Game.w/2, Game.h/2, 'shapes');
+    // this.shapeSprite.anchor.setTo(0.5, 0.5);
 
     this.shapes = this.game.add.group();
+    this.slots = this.game.add.group();
 
     // console.log(this.shapeSprite.animations.frameTotal);
 
-    Shape = function(game, frame) {
-      Phaser.Sprite.call(this, game, Game.w/4+(i*42), 200, 'shapes', frame);
+    Shape = function(game, x, y, frame) {
+      Phaser.Sprite.call(this, game, x, y, 'shapes', frame);
+      this.anchor.setTo(0.5, 0.5);
+      this.tint = 0xff00ff;
     };
 
     Shape.prototype = Object.create(Phaser.Sprite.prototype);
     Shape.prototype.constructor = Shape;
 
     //Create Shapes
-    for(var i = 1; i < this.shapeSprite.animations.frameTotal; i++) {
-      this.shapes.add(new Shape(game,i));
+    var shape_count = 9;
+    for(var i = 1; i < 9; i++) {
+      var shape_x = Game.w/4+(i*42);
+      var shape_y = 200; 
+      this.shapes.add(new Shape(this.game, shape_x, shape_y, i)); //draw shapes
+
+      var slot_x = Game.w/4-100+(i*64);
+      var slot_y = Game.h/2; 
+
+      var tile = this.game.add.sprite(slot_x, slot_y, 'shapes',0);
+      tile.anchor.setTo(0.5, 0.5);
+      tile.tint = 0xdcdcdc;
+      tile.alpha = 0.5;
+
+      this.slots.add(new Shape(this.game, slot_x, slot_y, i)); //draw shapes
+      // this.game.add.sprite(0+i*64, Game.h/2, 'shapes',0);
+
     }
+
+
+
 
 
 

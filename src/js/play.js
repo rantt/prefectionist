@@ -18,7 +18,7 @@ var aKey;
 var sKey;
 var dKey;
 var score = 0;
-var shape_count = 8;
+var shape_count=shapes_left = 8;
 var slots,tiles,shapes;
 
 Game.Play = function(game) {
@@ -37,6 +37,23 @@ Game.Play.prototype = {
     //Need to add a timer, could use a set time amount
     //or possibly a short solve time but it get's increase with every
     //right answer
+
+    var bmd = this.game.add.bitmapData(this.game.width, 30);
+    bmd.ctx.beginPath();
+    bmd.ctx.rect(0, 0, this.game.width, 30);
+    bmd.ctx.fillStyle = '#fff';
+    bmd.ctx.fill();
+    // bmd.ctx.beginPath();
+    // bmd.ctx.rect(0, 0, this.game.width, 30);  
+    // bmd.ctx.rect(16, 16, 16, 16);
+    // bmd.ctx.fillStyle = '#00bfff'; //blue
+
+
+    this.count_down = this.game.add.sprite(Game.w/2, 270, bmd);
+    this.count_down.anchor.setTo(0.5);
+    this.count_down.limit = 10000;
+    this.time_limit = this.game.time.now + 10000;
+
      
     function shuffle(deck){
       var tmp_deck = deck.slice();
@@ -160,9 +177,10 @@ Game.Play.prototype = {
       //TODO:
       //*  Snap in Place
       //*  Score Point
-
       this.game.add.tween(shape).to({x: slot.initialX, y: slot.initialY}, 50, Phaser.Easing.Linear.Out, true, 0);
       console.log('score point');
+      shapes_left -= 1;
+      this.time_limit += 3000;
     }else {
       this.game.add.tween(shape).to({x: shape.initialX, y: shape.initialY}, 300, Phaser.Easing.Linear.Out, true, 0);
       // shape.x = shape.initialX; 
@@ -175,6 +193,31 @@ Game.Play.prototype = {
 
   },
   update: function() {
+    if (this.game.time.now > this.time_limit) {
+      this.game.state.start('Menu');
+      console.log('GAME OVER');
+    }
+
+    if (shapes_left == 0) {
+      this.game.state.start('Menu');
+      console.log('YOU WIN');
+    }
+
+    this.count_down.scale.x = (1 - this.game.time.now/this.time_limit);
+    console.log(this.count_down.scale.x);
+    if (this.count_down.scale.x > 0.7) {
+      this.count_down.tint = 0x00ff00;
+      console.log('not bad');
+    }else if (this.count_down.scale.x > 0.3) {
+      this.count_down.tint = 0xffff00;
+    }else if (this.count_down.scale.x > 0) {
+      this.count_down.tint = 0xff0000;
+    }
+    // if (this.count_down.scale.x > 0.80) {
+    //   this.count_down.tint = 0x00ff00;
+    // }
+
+    // console.log(this.game.time.now/this.time_limit);
 
     // // Toggle Music
     // muteKey.onDown.add(this.toggleMute, this);

@@ -18,6 +18,7 @@ var aKey;
 var sKey;
 var dKey;
 var score = 0;
+var shape_count = 8;
 var slots,tiles,shapes;
 
 Game.Play = function(game) {
@@ -32,48 +33,96 @@ Game.Play.prototype = {
     // this.shapeSprite = this.game.add.sprite(Game.w/2, Game.h/2, 'shapes');
     // this.shapeSprite.anchor.setTo(0.5, 0.5);
 
+    //TODO:
+    //Need to add a timer, could use a set time amount
+    //or possibly a short solve time but it get's increase with every
+    //right answer
+     
+    function shuffle(deck){
+      var tmp_deck = deck.slice();
+
+      var result = []; 
+      while (tmp_deck.length > 0) {  
+        var index = Math.floor(Math.random() * tmp_deck.length);
+        result.push(tmp_deck.splice(index, 1)[0]);
+      }
+      return result;
+    }
+
+    var ordered_deck = [];
+    for(var i = 1;i <= shape_count; i++) {
+      ordered_deck.push(i);
+    }
+    console.log(ordered_deck);
+
+    this.shapes_deck = shuffle(ordered_deck);
+    this.slots_deck = shuffle(ordered_deck);
+
+    console.log(this.shapes_deck,this.slots_deck);
+
     slots = this.game.add.group();
     tiles = this.game.add.group();
     shapes = this.game.add.group();
 
-    // console.log(this.shapeSprite.animations.frameTotal);
-
-    Shape = function(game, x, y, frame) {
+    Shape = function(game, x, y, frame, color) {
+      color = color || 0xffff00;
       Phaser.Sprite.call(this, game, x, y, 'shapes', frame);
+      this.scale.x = 2; //reg size is 32px, but 64 works better
+      this.scale.y = 2;
       this.initialX = x;
       this.initialY = y;
       this.anchor.setTo(0.5, 0.5);
-      this.tint = 0xff00ff;
+      // this.tint = 0xff00ff;
+      // this.tint = 0xffff00;
+      this.tint = color;
     };
 
     Shape.prototype = Object.create(Phaser.Sprite.prototype);
     Shape.prototype.constructor = Shape;
 
-    //Create Shapes
-    var shape_count = 9;
-    for(var i = 1; i < 9; i++) {
+    //Calculate Board Dimensions to create a square
+    //that will fit all the pieces
+    var square = 1;
+    var square_index = 1;
+    while (square < shape_count) {
+      square = Math.pow(square_index, 2);
+      square_index += 1;
+    }
+    var board_size = Math.sqrt(square);   
 
-      var slot_x = Game.w/4-100+(i*64);
-      var slot_y = Game.h/2; 
+    // var margin = (Game.w-(64*board_size+(board_size - 1)*128))/2; //where is the spirte size and 128 is the spacing size 
+    var margin = (Game.w-(160*(board_size-1)))/2; //half sprite size + space size minus the gap after the last piece
+    var counter = 0;
+    console.log('margin'+margin);
+    for(var j = 0; j < board_size;j++) {
+      for(var i = 0; i < board_size;i++) {
+        if (this.shapes_deck[counter] !== undefined) {
+          var slot_x = margin + i*160; //32 + 128 or half iconsize plus spacing size  
+          var slot_y = Game.w/2+j*160;
 
-      var tile = this.game.add.sprite(slot_x, slot_y, 'shapes',0);
-      tile.anchor.setTo(0.5, 0.5);
-      tile.tint = 0xdcdcdc;
-      tile.alpha = 0.5;
-      tiles.add(tile);
+          var tile = this.game.add.sprite(slot_x, slot_y, 'shapes',0);
+          tile.anchor.setTo(0.5, 0.5);
+          tile.tint = 0xdcdcdc;
+          tile.alpha = 0.5;
+          tile.scale.x = 2;
+          tile.scale.y = 2;
+          tiles.add(tile);
 
-      slots.add(new Shape(this.game, slot_x, slot_y, i)); //draw shapes
-      // this.game.add.sprite(0+i*64, Game.h/2, 'shapes',0);
+          slots.add(new Shape(this.game, slot_x, slot_y, this.shapes_deck[counter], 0xdcdcdc)); //draw shapes
+        }
+        counter +=1;
 
-      var shape_x = Game.w/4+(i*42);
+      }
+    }
+    
+    for(var k = 1; k <= shape_count;k++) {
+      var shape_x = 40+(k*80);
       var shape_y = 200; 
-      var shape = new Shape(this.game, shape_x, shape_y, i);
+      var shape = new Shape(this.game, shape_x, shape_y, this.shapes_deck[k-1]);
       shape.inputEnabled = true;
       shape.input.enableDrag(true);
       shape.events.onDragStop.add(this.onDragStop, this);
-      // shape.input.enableSnap(42,42,false,true);
-      shapes.add(shape); //draw shapes
-
+      shapes.add(shape); 
     }
 
     // // Music
@@ -95,7 +144,7 @@ Game.Play.prototype = {
     this.twitterButton.visible = false;
     console.log(slots);
   },
-  onDragStop(shape, pointer) {
+  onDragStop:  function(shape, pointer) {
     console.log('on drag stop' + slots.length);  
     var slot;
     for(var i=0; i < slots.length;i++) {

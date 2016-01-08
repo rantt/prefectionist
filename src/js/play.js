@@ -43,16 +43,13 @@ Game.Play.prototype = {
     bmd.ctx.rect(0, 0, this.game.width, 30);
     bmd.ctx.fillStyle = '#fff';
     bmd.ctx.fill();
-    // bmd.ctx.beginPath();
-    // bmd.ctx.rect(0, 0, this.game.width, 30);  
-    // bmd.ctx.rect(16, 16, 16, 16);
-    // bmd.ctx.fillStyle = '#00bfff'; //blue
-
 
     this.count_down = this.game.add.sprite(Game.w/2, 270, bmd);
     this.count_down.anchor.setTo(0.5);
-    this.count_down.limit = 10000;
-    this.time_limit = this.game.time.now + 10000;
+    this.count_down.limit = 5000;
+    this.time_limit = this.game.time.now + this.count_down.limit;
+    console.log('creating timelimit ' + this.time_limit + ' '+ this.game.width + ' ' + this.count_down.scale.x + ' ');
+    console.log(this.count_down.width);
 
      
     function shuffle(deck){
@@ -70,12 +67,9 @@ Game.Play.prototype = {
     for(var i = 1;i <= shape_count; i++) {
       ordered_deck.push(i);
     }
-    console.log(ordered_deck);
 
     this.shapes_deck = shuffle(ordered_deck);
     this.slots_deck = shuffle(ordered_deck);
-
-    console.log(this.shapes_deck,this.slots_deck);
 
     slots = this.game.add.group();
     tiles = this.game.add.group();
@@ -107,10 +101,8 @@ Game.Play.prototype = {
     }
     var board_size = Math.sqrt(square);   
 
-    // var margin = (Game.w-(64*board_size+(board_size - 1)*128))/2; //where is the spirte size and 128 is the spacing size 
     var margin = (Game.w-(160*(board_size-1)))/2; //half sprite size + space size minus the gap after the last piece
     var counter = 0;
-    console.log('margin'+margin);
     for(var j = 0; j < board_size;j++) {
       for(var i = 0; i < board_size;i++) {
         if (this.shapes_deck[counter] !== undefined) {
@@ -128,7 +120,6 @@ Game.Play.prototype = {
           slots.add(new Shape(this.game, slot_x, slot_y, this.shapes_deck[counter], 0xdcdcdc)); //draw shapes
         }
         counter +=1;
-
       }
     }
     
@@ -159,10 +150,8 @@ Game.Play.prototype = {
     this.twitterButton = this.game.add.button(this.game.world.centerX, this.game.world.centerY + 200,'twitter', this.twitter, this);
     this.twitterButton.anchor.set(0.5);
     this.twitterButton.visible = false;
-    console.log(slots);
   },
   onDragStop:  function(shape, pointer) {
-    console.log('on drag stop' + slots.length);  
     var slot;
     for(var i=0; i < slots.length;i++) {
       if (slots.children[i].frame === shape.frame){
@@ -178,46 +167,37 @@ Game.Play.prototype = {
       //*  Snap in Place
       //*  Score Point
       this.game.add.tween(shape).to({x: slot.initialX, y: slot.initialY}, 50, Phaser.Easing.Linear.Out, true, 0);
-      console.log('score point');
       shapes_left -= 1;
-      this.time_limit += 3000;
+      this.time_limit += 2000;
     }else {
       this.game.add.tween(shape).to({x: shape.initialX, y: shape.initialY}, 300, Phaser.Easing.Linear.Out, true, 0);
-      // shape.x = shape.initialX; 
-      // shape.y = shape.initialY; 
     }
 
-    // this.game.physics.arcade.overlap(sprite, slots, function(player, enemy) {
-    //   console.log('overlapping true');  
-    // }, null, this);
 
   },
   update: function() {
     if (this.game.time.now > this.time_limit) {
-      this.game.state.start('Menu');
       console.log('GAME OVER');
+      shape_count=shapes_left = 8;
+      this.game.state.start('Menu');
     }
 
     if (shapes_left == 0) {
-      this.game.state.start('Menu');
       console.log('YOU WIN');
+      shape_count=shapes_left = 8;
+      this.game.state.start('Menu');
     }
 
-    this.count_down.scale.x = (1 - this.game.time.now/this.time_limit);
-    console.log(this.count_down.scale.x);
+    this.count_down.scale.x = (this.time_limit - this.game.time.now)/this.count_down.limit;
+
+    console.log(this.game.time.now +'/'+this.time_limit);
     if (this.count_down.scale.x > 0.7) {
       this.count_down.tint = 0x00ff00;
-      console.log('not bad');
     }else if (this.count_down.scale.x > 0.3) {
       this.count_down.tint = 0xffff00;
     }else if (this.count_down.scale.x > 0) {
       this.count_down.tint = 0xff0000;
     }
-    // if (this.count_down.scale.x > 0.80) {
-    //   this.count_down.tint = 0x00ff00;
-    // }
-
-    // console.log(this.game.time.now/this.time_limit);
 
     // // Toggle Music
     // muteKey.onDown.add(this.toggleMute, this);

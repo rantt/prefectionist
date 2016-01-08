@@ -1,0 +1,11 @@
+<TextureAtlas imagePath="shapes.png">
+	<SubTexture name="background.png" x="0" y="0" width="42" height="42"/>
+	<SubTexture name="circle.png" x="84" y="0" width="38" height="38"/>
+	<SubTexture name="diamond.png" x="0" y="44" width="41" height="41"/>
+	<SubTexture name="hexagon.png" x="85" y="40" width="35" height="40"/>
+	<SubTexture name="octogon.png" x="43" y="44" width="40" height="40"/>
+	<SubTexture name="pentagon.png" x="42" y="87" width="40" height="39"/>
+	<SubTexture name="septagon.png" x="0" y="87" width="40" height="39"/>
+	<SubTexture name="square.png" x="84" y="86" width="36" height="35"/>
+	<SubTexture name="triangle.png" x="44" y="0" width="38" height="33"/>
+</TextureAtlas>

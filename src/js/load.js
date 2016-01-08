@@ -41,6 +41,9 @@ Game.Load.prototype = {
     
     //Debug Plugin
     // this.game.add.plugin(Phaser.Plugin.Debug);
+    
+    var screenShake = this.game.plugins.add(Phaser.Plugin.ScreenShake);
+    this.game.plugins.ScreenShake = screenShake;
 
     //Loading Screen Message/bar
     var loadingText = this.game.add.text(Game.w, Game.h, 'Loading...', { font: '30px Helvetica', fill: '#000' });

@@ -6,20 +6,19 @@
  */
 
 // // Choose Random integer in a range
-// function rand (min, max) {
-//     return Math.floor(Math.random() * (max - min + 1)) + min;
-// }
+function rand (min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 // var musicOn = true;
 
 
-var wKey;
-var aKey;
-var sKey;
-var dKey;
+var wKey,aKey,sKey,dKey;
 var score = 0;
+var level = 1;
 //31 Total Shapes
-var shape_count=shapes_left = 25;
+// var shape_count=shapes_left = 4;
+var shape_count,shapes_left;
 var slots,tiles,shapes;
 
 Game.Play = function(game) {
@@ -29,111 +28,8 @@ Game.Play = function(game) {
 Game.Play.prototype = {
   create: function() {
     this.game.world.setBounds(0, 0 ,Game.w ,Game.h);
-
-
-    // this.shapeSprite = this.game.add.sprite(Game.w/2, Game.h/2, 'shapes');
-    // this.shapeSprite.anchor.setTo(0.5, 0.5);
-
-    //TODO:
-    //Need to add a timer, could use a set time amount
-    //or possibly a short solve time but it get's increase with every
-    //right answer
-
-    var bmd = this.game.add.bitmapData(this.game.width, 30);
-    bmd.ctx.beginPath();
-    bmd.ctx.rect(0, 0, this.game.width, 30);
-    bmd.ctx.fillStyle = '#fff';
-    bmd.ctx.fill();
-
-    this.count_down = this.game.add.sprite(Game.w/2, 200, bmd);
-    this.count_down.anchor.setTo(0.5);
-    this.count_down.limit = 60000;
-    this.time_limit = this.game.time.now + this.count_down.limit;
-
-     
-    function shuffle(deck){
-      var tmp_deck = deck.slice();
-
-      var result = []; 
-      while (tmp_deck.length > 0) {  
-        var index = Math.floor(Math.random() * tmp_deck.length);
-        result.push(tmp_deck.splice(index, 1)[0]);
-      }
-      return result;
-    }
-
-    var ordered_deck = [];
-    for(var i = 1;i <= shape_count; i++) {
-      ordered_deck.push(i);
-    }
-
-    this.shapes_deck = shuffle(ordered_deck);
-    this.slots_deck = shuffle(ordered_deck);
-
-    slots = this.game.add.group();
-    tiles = this.game.add.group();
-    shapes = this.game.add.group();
-
-    Shape = function(game, x, y, frame, color) {
-      color = color || 0xffff00;
-      Phaser.Sprite.call(this, game, x, y, 'shapes', frame);
-      this.initialX = x;
-      this.initialY = y;
-      // this.anchor.setTo(0.5, 0.5);
-      this.anchor.setTo(0.5);
-      // this.tint = 0xff00ff;
-      // this.tint = 0xffff00;
-      this.tint = color;
-    };
-
-    Shape.prototype = Object.create(Phaser.Sprite.prototype);
-    Shape.prototype.constructor = Shape;
-
-    //Calculate Board Dimensions to create a square
-    //that will fit all the pieces
-    var square = 1;
-    var square_index = 1;
-    while (square < shape_count) {
-      square = Math.pow(square_index, 2);
-      square_index += 1;
-    }
-    var board_size = Math.sqrt(square);   
-
-    var margin = (Game.w-(160*(board_size-1)))/2; //half sprite size + space size minus the gap after the last piece
-    var counter = 0;
-    for(var j = 0; j < board_size;j++) {
-      for(var i = 0; i < board_size;i++) {
-        if (this.slots_deck[counter] !== undefined) {
-          var slot_x = margin + i*160; //32 + 128 or half iconsize plus spacing size  
-          var slot_y = 310+j*160;
-
-          var tile = this.game.add.sprite(slot_x, slot_y, 'shapes',0);
-          tile.anchor.setTo(0.5, 0.5);
-          tile.tint = 0xdcdcdc;
-          tile.alpha = 0.5;
-          tiles.add(tile);
-
-          slots.add(new Shape(this.game, slot_x, slot_y, this.slots_deck[counter], 0xdcdcdc)); //draw shapes
-        }
-        counter +=1;
-      }
-    }
-    
-    for(var k = 1; k <= shape_count;k++) {
-      var shape_x = k*96;
-      var shape_y = 100; 
-      var shape = new Shape(this.game, shape_x, shape_y, this.shapes_deck[k-1]);
-      shape.inSlot = false;
-      shape.inputEnabled = true;
-      shape.input.enableDrag(true);
-      shape.events.onDragStop.add(this.onDragStop, this);
-      shapes.add(shape); 
-    }
-
-    // // Music
-    // this.music = this.game.add.sound('music');
-    // this.music.volume = 0.5;
-    // this.music.play('',0,1,true);
+    this.game_timer = this.game.time.now + 2000;
+    this.start_time = this.game.time.now;
 
     //Setup WASD and extra keys
     wKey = this.game.input.keyboard.addKey(Phaser.Keyboard.W);
@@ -143,14 +39,104 @@ Game.Play.prototype = {
     // muteKey = game.input.keyboard.addKey(Phaser.Keyboard.M);
 
 
+    // this.twitterButton = new TwitterButton(this.game);
+    this.message_screen = this.game.add.sprite(Game.w/2, Game.h/2, this.makeBox(Game.w, Game.h));
+    this.message_screen.anchor.setTo(0.5);
+    this.message_screen.tint = 0x222222;
+    this.message_screen.alpha = 0.5;
+    this.message_screen.visible = false;
+
+    this.message_text = this.game.add.bitmapText(Game.w/2, Game.h/2, 'minecraftia','Level '+level,48);
+    this.message_text.anchor.setTo(0.5);
+    this.message_text.visible = false;
+
     //Create Twitter button as invisible, show during win condition to post highscore
+    this.twitter_button = new TwitterButton(this.game);
     this.twitterButton = this.game.add.button(this.game.world.centerX, this.game.world.centerY + 200,'twitter', this.twitter, this);
     this.twitterButton.anchor.set(0.5);
     this.twitterButton.visible = false;
+
+  },
+  loadLevel: function(level) {
+    if (level === 1) {
+      shapes_left=shape_count = 4;
+    }else if(level === 2) {
+      shapes_left=shape_count = 9;
+    }else if(level === 3) {
+      shapes_left=shape_count = 16;
+    }else if (level === 4) {
+      shapes_left=shape_count = 4;
+    }
+
+    var bmd = this.makeBox(this.game.width, 30);
+    this.count_down = this.game.add.sprite(Game.w/2, 200, bmd);
+
+    this.count_down.anchor.setTo(0.5);
+    this.count_down.limit = 3000;
+    this.time_limit = this.game.time.now + this.count_down.limit;
+
+    var ordered_deck = [];
+    for(var i = 1;i < 31; i++) {
+      ordered_deck.push(i);
+    }
+    var starter_deck = []
+
+    while(starter_deck.length < shape_count) {
+      var index = Math.floor(Math.random() * ordered_deck.length);
+      starter_deck.push(ordered_deck.splice(index, 1)[0]);
+     // var choice = rand(1,shape_count); 
+     // if (choice.
+     // starter_deck.push(choice);
+     // console.log(starter_deck);
+    }
+    console.log(starter_deck);
+
+    //Randomize the order of the shapes and the board
+    // this.shapes_deck = this.shuffle(ordered_deck);
+    // this.slots_deck = this.shuffle(ordered_deck);
+
+    this.shapes_deck = this.shuffle(starter_deck);
+    this.slots_deck = this.shuffle(starter_deck);
+
+    this.board = new Board(this.game, this.slots_deck);
+    slots = this.board.slots;
+    tiles = this.board.tiles;
+    shapes = this.game.add.group();
+
+    //Add Shapes 
+    for(var k = 1; k <= shape_count;k++) {
+      var shape_x = k*96;
+      var shape_y = 100; 
+
+      var shape = new Shape(this.game, shape_x, shape_y, this.shapes_deck[k-1]);
+      shape.events.onDragStop.add(this.onDragStop, this);
+
+      shapes.add(shape); 
+      this.game.add.tween(shape).to({x: shape.initialX, y: shape.initialY}, 100, Phaser.Easing.Linear.Out, true, 0); //snap in place
+    }
+
+  },
+  makeBox: function(x,y) {
+    var bmd = this.game.add.bitmapData(x, y);
+    bmd.ctx.beginPath();
+    bmd.ctx.rect(0, 0, x, y);
+    bmd.ctx.fillStyle = '#fff';
+    bmd.ctx.fill();
+    return bmd;
+  },
+  shuffle:  function(deck){
+    var tmp_deck = deck.slice();
+
+    var result = []; 
+    while (tmp_deck.length > 0) {  
+      var index = Math.floor(Math.random() * tmp_deck.length);
+      result.push(tmp_deck.splice(index, 1)[0]);
+    }
+    return result;
   },
   onDragStop:  function(shape, pointer) {
-    var slot;
-    var tile;
+    var slot,title;
+
     for(var i=0; i < slots.length;i++) {
       if (slots.children[i].frame === shape.frame){
         slot = slots.children[i];
@@ -190,32 +176,75 @@ Game.Play.prototype = {
 
   },
   update: function() {
-    if (this.game.time.now > this.time_limit) {
-      console.log('GAME OVER');
-      shape_count=shapes_left = 25;
-      this.game.state.start('Menu');
+
+
+    if (level === 5) {
+      this.message_screen.visible = true;
+      this.message_text.setText('You WIN!');
+      this.twitterButton.visible = true;
+      this.message_text.visible = true;
+      this.level_loaded = false;
+    }else if (this.game.time.now < this.game_timer) {
+      //Show Level Message
+      this.message_screen.visible = true;
+      this.message_text.setText('Level '+level+"\n Get Ready!");
+      this.message_text.visible = true;
+      this.level_loaded = false;
+    } else {
+      if (this.level_loaded !== true) {
+        this.loadLevel(level);
+        this.level_loaded = true;
+        this.message_screen.visible = false;
+        this.message_text.visible = false;
+      }
+
+      if (this.game.time.now > this.time_limit) {
+        console.log('GAME OVER');
+        this.game.plugins.ScreenShake.start(40);
+        this.game_timer = this.game.time.now+ 2000;
+        shape_count=shapes_left = 25;
+        this.resetGame();
+        // this.game.state.start('Menu');
+      }
+
+      if (shapes_left == 0) {
+        console.log('YOU WIN');
+        // shape_count=shapes_left = 9;
+        this.game_timer = this.game.time.now + 2000;
+        level += 1;
+        this.resetGame();
+        // this.game.state.start('Menu');
+      }
+
+      this.count_down.scale.x = (this.time_limit - this.game.time.now)/this.count_down.limit;
+
+      // console.log(this.game.time.now +'/'+this.time_limit);
+      if (this.count_down.scale.x > 0.7) {
+        this.count_down.tint = 0x00ff00;
+      }else if (this.count_down.scale.x > 0.3) {
+        this.count_down.tint = 0xffff00;
+      }else if (this.count_down.scale.x > 0) {
+        this.count_down.tint = 0xff0000;
+      }
+
     }
 
-    if (shapes_left == 0) {
-      console.log('YOU WIN');
-      shape_count=shapes_left = 25;
-      this.game.state.start('Menu');
-    }
-
-    this.count_down.scale.x = (this.time_limit - this.game.time.now)/this.count_down.limit;
-
-    // console.log(this.game.time.now +'/'+this.time_limit);
-    if (this.count_down.scale.x > 0.7) {
-      this.count_down.tint = 0x00ff00;
-    }else if (this.count_down.scale.x > 0.3) {
-      this.count_down.tint = 0xffff00;
-    }else if (this.count_down.scale.x > 0) {
-      this.count_down.tint = 0xff0000;
-    }
 
     // // Toggle Music
     // muteKey.onDown.add(this.toggleMute, this);
 
+  },
+  resetGame: function() {
+    this.count_down.kill();
+    tiles.forEach(function(tile) {
+      tile.kill();
+    });
+    shapes.forEach(function(shape) {
+      shape.kill();
+    });
+    slots.forEach(function(slot) {
+      slot.kill();
+    });
   },
   twitter: function() {
     //Popup twitter window to post highscore
@@ -224,6 +253,8 @@ Game.Play.prototype = {
     var tags = ['1GAM'];
 
     window.open('http://twitter.com/share?text=My+best+score+is+'+score+'+playing+GAME+TITLE+See+if+you+can+beat+it.+at&via='+twitter_name+'&url='+game_url+'&hashtags='+tags.join(','), '_blank');
+
+
   },
 
   // toggleMute: function() {
@@ -235,8 +266,8 @@ Game.Play.prototype = {
   //     this.music.volume = 0.5;
   //   }
   // },
-  render: function() {
-    game.debug.text('Shapes Left: ' + shapes_left, 32, 96);
-  }
+  // render: function() {
+  //   game.debug.text('Shapes Left: ' + shapes_left, 32, 96);
+  // }
 
 };

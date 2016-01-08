@@ -18,7 +18,8 @@ var aKey;
 var sKey;
 var dKey;
 var score = 0;
-var shape_count=shapes_left = 8;
+//31 Total Shapes
+var shape_count=shapes_left = 25;
 var slots,tiles,shapes;
 
 Game.Play = function(game) {
@@ -44,12 +45,10 @@ Game.Play.prototype = {
     bmd.ctx.fillStyle = '#fff';
     bmd.ctx.fill();
 
-    this.count_down = this.game.add.sprite(Game.w/2, 270, bmd);
+    this.count_down = this.game.add.sprite(Game.w/2, 200, bmd);
     this.count_down.anchor.setTo(0.5);
-    this.count_down.limit = 5000;
+    this.count_down.limit = 60000;
     this.time_limit = this.game.time.now + this.count_down.limit;
-    console.log('creating timelimit ' + this.time_limit + ' '+ this.game.width + ' ' + this.count_down.scale.x + ' ');
-    console.log(this.count_down.width);
 
      
     function shuffle(deck){
@@ -78,11 +77,10 @@ Game.Play.prototype = {
     Shape = function(game, x, y, frame, color) {
       color = color || 0xffff00;
       Phaser.Sprite.call(this, game, x, y, 'shapes', frame);
-      this.scale.x = 2; //reg size is 32px, but 64 works better
-      this.scale.y = 2;
       this.initialX = x;
       this.initialY = y;
-      this.anchor.setTo(0.5, 0.5);
+      // this.anchor.setTo(0.5, 0.5);
+      this.anchor.setTo(0.5);
       // this.tint = 0xff00ff;
       // this.tint = 0xffff00;
       this.tint = color;
@@ -105,28 +103,27 @@ Game.Play.prototype = {
     var counter = 0;
     for(var j = 0; j < board_size;j++) {
       for(var i = 0; i < board_size;i++) {
-        if (this.shapes_deck[counter] !== undefined) {
+        if (this.slots_deck[counter] !== undefined) {
           var slot_x = margin + i*160; //32 + 128 or half iconsize plus spacing size  
-          var slot_y = Game.w/2+j*160;
+          var slot_y = 310+j*160;
 
           var tile = this.game.add.sprite(slot_x, slot_y, 'shapes',0);
           tile.anchor.setTo(0.5, 0.5);
           tile.tint = 0xdcdcdc;
           tile.alpha = 0.5;
-          tile.scale.x = 2;
-          tile.scale.y = 2;
           tiles.add(tile);
 
-          slots.add(new Shape(this.game, slot_x, slot_y, this.shapes_deck[counter], 0xdcdcdc)); //draw shapes
+          slots.add(new Shape(this.game, slot_x, slot_y, this.slots_deck[counter], 0xdcdcdc)); //draw shapes
         }
         counter +=1;
       }
     }
     
     for(var k = 1; k <= shape_count;k++) {
-      var shape_x = 40+(k*80);
-      var shape_y = 200; 
+      var shape_x = k*96;
+      var shape_y = 100; 
       var shape = new Shape(this.game, shape_x, shape_y, this.shapes_deck[k-1]);
+      shape.inSlot = false;
       shape.inputEnabled = true;
       shape.input.enableDrag(true);
       shape.events.onDragStop.add(this.onDragStop, this);
@@ -153,9 +150,11 @@ Game.Play.prototype = {
   },
   onDragStop:  function(shape, pointer) {
     var slot;
+    var tile;
     for(var i=0; i < slots.length;i++) {
       if (slots.children[i].frame === shape.frame){
         slot = slots.children[i];
+        tile = tiles.children[i];
         break;
       }
     }
@@ -166,11 +165,26 @@ Game.Play.prototype = {
       //TODO:
       //*  Snap in Place
       //*  Score Point
-      this.game.add.tween(shape).to({x: slot.initialX, y: slot.initialY}, 50, Phaser.Easing.Linear.Out, true, 0);
+      this.game.add.tween(shape).to({x: slot.initialX, y: slot.initialY}, 50, Phaser.Easing.Linear.Out, true, 0); //snap in place
+      tile.tint = 0xffff00;
+
+      shape.input.enableDrag(false);
+      shape.inputEnabled = false;
+      shape.inSlot = true;
       shapes_left -= 1;
       this.time_limit += 2000;
+      var position = 0;
+      for(var i=0; i < shapes.length;i++) {
+        var s = shapes.children[i];
+        if ((s.frame !== shape.frame) && (s.inSlot === false)) {
+          s.initialX = 100+position*96;
+          this.game.add.tween(s).to({x: s.initialX}, 50, Phaser.Easing.Linear.Out, true, 0);
+          position += 1;
+        }
+      }
     }else {
-      this.game.add.tween(shape).to({x: shape.initialX, y: shape.initialY}, 300, Phaser.Easing.Linear.Out, true, 0);
+      //Put Piece Back
+      this.game.add.tween(shape).to({x: shape.initialX, y: shape.initialY}, 200, Phaser.Easing.Linear.Out, true, 0);
     }
 
 
@@ -178,19 +192,19 @@ Game.Play.prototype = {
   update: function() {
     if (this.game.time.now > this.time_limit) {
       console.log('GAME OVER');
-      shape_count=shapes_left = 8;
+      shape_count=shapes_left = 25;
       this.game.state.start('Menu');
     }
 
     if (shapes_left == 0) {
       console.log('YOU WIN');
-      shape_count=shapes_left = 8;
+      shape_count=shapes_left = 25;
       this.game.state.start('Menu');
     }
 
     this.count_down.scale.x = (this.time_limit - this.game.time.now)/this.count_down.limit;
 
-    console.log(this.game.time.now +'/'+this.time_limit);
+    // console.log(this.game.time.now +'/'+this.time_limit);
     if (this.count_down.scale.x > 0.7) {
       this.count_down.tint = 0x00ff00;
     }else if (this.count_down.scale.x > 0.3) {
@@ -221,8 +235,8 @@ Game.Play.prototype = {
   //     this.music.volume = 0.5;
   //   }
   // },
-  // render: function() {
-  //   game.debug.text('Health: ' + tri.health, 32, 96);
-  // }
+  render: function() {
+    game.debug.text('Shapes Left: ' + shapes_left, 32, 96);
+  }
 
 };

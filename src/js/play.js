@@ -128,7 +128,7 @@ Game.Play.prototype = {
      // starter_deck.push(choice);
      // console.log(starter_deck);
     }
-    console.log(starter_deck);
+    // console.log(starter_deck);
 
     //Randomize the order of the shapes and the board
     // this.shapes_deck = this.shuffle(ordered_deck);
@@ -284,7 +284,7 @@ Game.Play.prototype = {
       }
 
       if (shapes_left === 0) {
-        console.log('YOU WIN');
+        // console.log('YOU WIN');
         this.winning = true;
         // this.game_timer = this.game.time.now + 2000;
         level += 1;

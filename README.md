@@ -5,6 +5,8 @@ Match shapes with their appropriate slots.  Beat the clock to advance to the nex
 ##onegameaweek - Game 1
 I thought I'd step it up this year and try to make a game every week and this is the first.
 
+![screenshot](screenshots/screenshot.png)
+
 You can play the game [here](http://divideby5.com/games/prefectionist).
 
 ##Tools

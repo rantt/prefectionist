@@ -15,7 +15,7 @@
 
 var wKey,aKey,sKey,dKey;
 var retries = 0;
-var level = 4;
+var level = 1;
 //31 Total Shapes
 // var shape_count=shapes_left = 4;
 var shape_count,shapes_left;

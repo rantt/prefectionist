@@ -15,6 +15,7 @@
 
 var wKey,aKey,sKey,dKey;
 var level = 1;
+var adjustDifficulty = 0;
 var retries = 0;
 //31 Total Shapes
 // var shape_count=shapes_left = 4;
@@ -33,13 +34,14 @@ Game.Play.prototype = {
     // this.game_timer = this.game.time.now + 2000;
     // this.start_time = this.game.time.now;
 
-      if (difficulty === 'easy') {
-        limit = 5000;
-      }else if (difficulty === 'normal') {
-        limit = 3000;
-      }else if (difficulty === 'hard') {
-        limit = 1500;
-      }
+      // if (difficulty === 'easy') {
+      //   limit = 5000;
+      // }else if (difficulty === 'normal') {
+      //   limit = 3000;
+      // }else if (difficulty === 'hard') {
+      //   limit = 1500;
+      // }
+    this.setDifficulty();
 
 
     this.showing_message = true;
@@ -80,6 +82,15 @@ Game.Play.prototype = {
     this.twitterButton.anchor.set(0.5);
     this.twitterButton.visible = false;
 
+  },
+  setDifficulty: function() {
+    if (difficulty === 'easy') {
+      limit = 5000;
+    }else if (difficulty === 'normal') {
+      limit = 3000;
+    }else if (difficulty === 'hard') {
+      limit = 1500;
+    }
   },
   loadLevel: function(level) {
     // if (this.level_loading === true) {
@@ -250,7 +261,16 @@ Game.Play.prototype = {
         this.level_loaded = true;
       }
       if (this.game.time.now > this.time_limit) {
+        if (difficulty === 'easy' || difficulty === 'normal') {
+          adjustDifficulty += 1;
+          if (adjustDifficulty === 3) {
+            limit += 1000;
+            adjustDifficulty = 0;
+          }
+        } 
         retries += 1;
+
+
         this.winning = false;
         this.lostSnd.play();
         this.game.plugins.ScreenShake.start(40);
@@ -270,6 +290,7 @@ Game.Play.prototype = {
         level += 1;
         this.level_loaded = false;
         this.showing_message = true;
+        this.setDifficulty();
         this.resetGame();
       }
 
@@ -306,6 +327,7 @@ Game.Play.prototype = {
   twitter: function() {
     //Popup twitter window to post highscore
     var game_url = 'http://www.divideby5.com/games/prefectionist/'; 
+    // var game_url = 'http://rantt.itch.io/prefectionist'; 
     var twitter_name = 'rantt_';
     // var tags = ['onegameaweek'];
     var tags = [''];
@@ -323,8 +345,8 @@ Game.Play.prototype = {
   //     this.music.volume = 0.5;
   //   }
   // },
-  // render: function() {
-  //   game.debug.text('Shapes Left: ' + shapes_left, 32, 96);
-  // }
+  render: function() {
+    game.debug.text('limit' + limit, 32, 96);
+  }
 
 };

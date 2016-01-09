@@ -14,8 +14,8 @@
 
 
 var wKey,aKey,sKey,dKey;
-var retries = 0;
 var level = 1;
+var retries = 0;
 //31 Total Shapes
 // var shape_count=shapes_left = 4;
 var shape_count,shapes_left;
@@ -107,7 +107,7 @@ Game.Play.prototype = {
     for(var i = 1;i < 31; i++) {
       ordered_deck.push(i);
     }
-    var starter_deck = []
+    var starter_deck = [];
 
     while(starter_deck.length < shape_count) {
       var index = Math.floor(Math.random() * ordered_deck.length);
@@ -250,7 +250,7 @@ Game.Play.prototype = {
         this.level_loaded = true;
       }
       if (this.game.time.now > this.time_limit) {
-        console.log('GAME OVER');
+        retries += 1;
         this.winning = false;
         this.lostSnd.play();
         this.game.plugins.ScreenShake.start(40);
@@ -263,7 +263,7 @@ Game.Play.prototype = {
         // this.game.state.start('Menu');
       }
 
-      if (shapes_left == 0) {
+      if (shapes_left === 0) {
         console.log('YOU WIN');
         this.winning = true;
         // this.game_timer = this.game.time.now + 2000;

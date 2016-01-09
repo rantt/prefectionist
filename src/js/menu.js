@@ -1,7 +1,7 @@
 /*global Game*/
 
 
-difficulty = 'normal';
+var difficulty = 'normal';
 
 Game.Menu = function(game){
   this.game = game;
@@ -19,7 +19,7 @@ Game.Menu.prototype =  {
           .to( {angle: 15}, 1000, Phaser.Easing.Linear.In)
           .to( {angle: -15}, 1000, Phaser.Easing.Linear.In)
           .start();
-        this.difficultyButtons = this.game.add.group()
+        this.difficultyButtons = this.game.add.group();
 
         this.easyButton = this.game.add.button(Game.w/2, Game.h/2+75,'easy', this.difficultySelect, this); 
         this.easyButton.anchor.setTo(0.5);
@@ -49,7 +49,7 @@ Game.Menu.prototype =  {
         btn.tint = 0xffffff;
       });
       button.tint = 0xffff00;
-      difficulty = button.key
+      difficulty = button.key;
 
       console.log(button);
     }, 

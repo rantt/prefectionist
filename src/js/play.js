@@ -6,20 +6,20 @@
  */
 
 // // Choose Random integer in a range
-function rand (min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+// function rand (min, max) {
+//     return Math.floor(Math.random() * (max - min + 1)) + min;
+// }
 
 // var musicOn = true;
 
 
 var wKey,aKey,sKey,dKey;
-var score = 0;
-var level = 1;
+var retries = 0;
+var level = 4;
 //31 Total Shapes
 // var shape_count=shapes_left = 4;
 var shape_count,shapes_left;
-var slots,tiles,shapes;
+var slots,tiles,shapes,limit;
 
 Game.Play = function(game) {
   this.game = game;
@@ -28,8 +28,32 @@ Game.Play = function(game) {
 Game.Play.prototype = {
   create: function() {
     this.game.world.setBounds(0, 0 ,Game.w ,Game.h);
-    this.game_timer = this.game.time.now + 2000;
-    this.start_time = this.game.time.now;
+		// this.game.stage.backgroundColor = '#213D5E';
+		this.game.stage.backgroundColor = '#192331';
+    // this.game_timer = this.game.time.now + 2000;
+    // this.start_time = this.game.time.now;
+
+      if (difficulty === 'easy') {
+        limit = 5000;
+      }else if (difficulty === 'normal') {
+        limit = 3000;
+      }else if (difficulty === 'hard') {
+        limit = 1500;
+      }
+
+
+    this.showing_message = true;
+    this.holding_pointer = false;
+    this.winning = true;
+
+    this.scoreSnd = this.game.add.sound('score'); 
+    this.scoreSnd.volume = 0.2;
+
+    this.failSnd = this.game.add.sound('fail'); 
+    this.failSnd.volume = 0.2;
+
+    this.lostSnd = this.game.add.sound('lost'); 
+    // this.lostSnd.volume = 0.2;
 
     //Setup WASD and extra keys
     wKey = this.game.input.keyboard.addKey(Phaser.Keyboard.W);
@@ -51,13 +75,17 @@ Game.Play.prototype = {
     this.message_text.visible = false;
 
     //Create Twitter button as invisible, show during win condition to post highscore
-    this.twitter_button = new TwitterButton(this.game);
+    // this.twitter_button = new TwitterButton(this.game);
     this.twitterButton = this.game.add.button(this.game.world.centerX, this.game.world.centerY + 200,'twitter', this.twitter, this);
     this.twitterButton.anchor.set(0.5);
     this.twitterButton.visible = false;
 
   },
   loadLevel: function(level) {
+    // if (this.level_loading === true) {
+    //   return;
+    // }
+
     if (level === 1) {
       shapes_left=shape_count = 4;
     }else if(level === 2) {
@@ -65,15 +93,15 @@ Game.Play.prototype = {
     }else if(level === 3) {
       shapes_left=shape_count = 16;
     }else if (level === 4) {
-      shapes_left=shape_count = 4;
+      shapes_left=shape_count = 25;
     }
 
     var bmd = this.makeBox(this.game.width, 30);
     this.count_down = this.game.add.sprite(Game.w/2, 200, bmd);
 
     this.count_down.anchor.setTo(0.5);
-    this.count_down.limit = 3000;
-    this.time_limit = this.game.time.now + this.count_down.limit;
+    // this.count_down.limit = 2000;
+    this.time_limit = this.game.time.now + limit;
 
     var ordered_deck = [];
     for(var i = 1;i < 31; i++) {
@@ -114,7 +142,7 @@ Game.Play.prototype = {
       shapes.add(shape); 
       this.game.add.tween(shape).to({x: shape.initialX, y: shape.initialY}, 100, Phaser.Easing.Linear.Out, true, 0); //snap in place
     }
-
+    // this.level_loading = false;
   },
   makeBox: function(x,y) {
     var bmd = this.game.add.bitmapData(x, y);
@@ -135,6 +163,7 @@ Game.Play.prototype = {
     return result;
   },
   onDragStop:  function(shape, pointer) {
+
     var slot,title;
 
     for(var i=0; i < slots.length;i++) {
@@ -148,9 +177,7 @@ Game.Play.prototype = {
     boundsShape = shape.getBounds();
     boundsSlot = slot.getBounds();
     if (Phaser.Rectangle.intersects(boundsShape, boundsSlot)) {
-      //TODO:
-      //*  Snap in Place
-      //*  Score Point
+      this.scoreSnd.play();
       this.game.add.tween(shape).to({x: slot.initialX, y: slot.initialY}, 50, Phaser.Easing.Linear.Out, true, 0); //snap in place
       tile.tint = 0xffff00;
 
@@ -158,7 +185,15 @@ Game.Play.prototype = {
       shape.inputEnabled = false;
       shape.inSlot = true;
       shapes_left -= 1;
-      this.time_limit += 2000;
+      //Don't let the time bonus stack too high
+      // this.time_limit += 2000;
+      // if (this.time_limit > this.game.time.now + 2000) {
+      //   this.time_limit = this.game.time.now + 2000;
+      // }
+
+      // this.time_limit = this.game.time.now + 2000;
+      this.time_limit = this.game.time.now + limit;
+      //Reposition Stack
       var position = 0;
       for(var i=0; i < shapes.length;i++) {
         var s = shapes.children[i];
@@ -170,6 +205,7 @@ Game.Play.prototype = {
       }
     }else {
       //Put Piece Back
+      this.failSnd.play();
       this.game.add.tween(shape).to({x: shape.initialX, y: shape.initialY}, 200, Phaser.Easing.Linear.Out, true, 0);
     }
 
@@ -177,46 +213,67 @@ Game.Play.prototype = {
   },
   update: function() {
 
+    if (this.game.input.activePointer.isUp) {
+      this.holding_pointer = false;
+    }
 
-    if (level === 5) {
-      this.message_screen.visible = true;
-      this.message_text.setText('You WIN!');
-      this.twitterButton.visible = true;
-      this.message_text.visible = true;
-      this.level_loaded = false;
-    }else if (this.game.time.now < this.game_timer) {
-      //Show Level Message
-      this.message_screen.visible = true;
-      this.message_text.setText('Level '+level+"\n Get Ready!");
-      this.message_text.visible = true;
-      this.level_loaded = false;
-    } else {
-      if (this.level_loaded !== true) {
-        this.loadLevel(level);
-        this.level_loaded = true;
-        this.message_screen.visible = false;
-        this.message_text.visible = false;
+     if (level === 5) {
+        this.message_screen.visible = true;
+        this.twitterButton.visible = true;
+        this.message_text.visible = true;
+        this.message_text.setText("You WIN! With "+retries+" retries.\nDifficulty "+difficulty+"\nClick To Play Again!");
+
+      //Play Again?
+      if (this.game.input.activePointer.isDown && this.holding_pointer === false) {
+        level = 1;
+        this.game.state.start('Menu');
       }
 
+     }else if (this.showing_message === true) {
+      if (this.game.input.activePointer.isDown && this.holding_pointer === false) {
+        this.holding_pointer = true;
+        this.showing_message = false;
+        this.level_loaded = false;
+        this.message_text.visible = false;
+      }else {
+        var msg = '';
+        if (this.winning === false) {
+          msg = "Try Again?";
+        }
+        this.message_screen.visible = true;
+        this.message_text.setText(msg+"\nLevel "+level+"\nClick To Start!");
+        this.message_text.visible = true;
+      }
+    }else {
+      if (this.level_loaded === false) {
+        this.loadLevel(level);
+        this.level_loaded = true;
+      }
       if (this.game.time.now > this.time_limit) {
         console.log('GAME OVER');
+        this.winning = false;
+        this.lostSnd.play();
         this.game.plugins.ScreenShake.start(40);
-        this.game_timer = this.game.time.now+ 2000;
+        this.holding_pointer = true;
+        // this.game_timer = this.game.time.now+ 2000;
         shape_count=shapes_left = 25;
+        this.level_loaded = false;
+        this.showing_message = true;
         this.resetGame();
         // this.game.state.start('Menu');
       }
 
       if (shapes_left == 0) {
         console.log('YOU WIN');
-        // shape_count=shapes_left = 9;
-        this.game_timer = this.game.time.now + 2000;
+        this.winning = true;
+        // this.game_timer = this.game.time.now + 2000;
         level += 1;
+        this.level_loaded = false;
+        this.showing_message = true;
         this.resetGame();
-        // this.game.state.start('Menu');
       }
 
-      this.count_down.scale.x = (this.time_limit - this.game.time.now)/this.count_down.limit;
+      this.count_down.scale.x = (this.time_limit - this.game.time.now)/limit;
 
       // console.log(this.game.time.now +'/'+this.time_limit);
       if (this.count_down.scale.x > 0.7) {
@@ -248,11 +305,11 @@ Game.Play.prototype = {
   },
   twitter: function() {
     //Popup twitter window to post highscore
-    var game_url = 'http://www.divideby5.com/games/GAMETITLE/'; 
+    var game_url = 'http://www.divideby5.com/games/prefectionist/'; 
     var twitter_name = 'rantt_';
-    var tags = ['1GAM'];
-
-    window.open('http://twitter.com/share?text=My+best+score+is+'+score+'+playing+GAME+TITLE+See+if+you+can+beat+it.+at&via='+twitter_name+'&url='+game_url+'&hashtags='+tags.join(','), '_blank');
+    var tags = ['onegameaweek'];
+    // var tags = [''];
+    window.open('http://twitter.com/share?text=I+beat+PREfectionist+on+'+difficulty+'+mode+with+'+retries+'+retries+See+if+you+can+beat+it.+at&via='+twitter_name+'&url='+game_url+'&hashtags='+tags.join(','), '_blank');
 
 
   },

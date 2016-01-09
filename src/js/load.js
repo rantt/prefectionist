@@ -52,12 +52,19 @@ Game.Load.prototype = {
   	this.game.load.setPreloadSprite(preloading);
 
     this.game.load.atlasXML('shapes', 'assets/images/shapes.png','assets/atlas/shapes.xml'); 
+    this.game.load.atlasXML('startbtn', 'assets/images/startbtn.png','assets/atlas/startbtn.xml'); 
 
     //Load button for twitter
     this.game.load.image('twitter','assets/images/twitter.png');
+    this.game.load.image('easy','assets/images/easy.png');
+    this.game.load.image('normal','assets/images/normal.png');
+    this.game.load.image('hard','assets/images/hard.png');
 
     // Music Track
     // this.game.load.audio('music','soundtrack.mp3');
+    this.game.load.audio('score', 'assets/audio/score.wav');
+    this.game.load.audio('fail', 'assets/audio/fail.wav');
+    this.game.load.audio('lost', 'assets/audio/lost.wav');
 
   },
   create: function() {

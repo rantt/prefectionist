@@ -307,8 +307,8 @@ Game.Play.prototype = {
     //Popup twitter window to post highscore
     var game_url = 'http://www.divideby5.com/games/prefectionist/'; 
     var twitter_name = 'rantt_';
-    var tags = ['onegameaweek'];
-    // var tags = [''];
+    // var tags = ['onegameaweek'];
+    var tags = [''];
     window.open('http://twitter.com/share?text=I+beat+PREfectionist+on+'+difficulty+'+mode+with+'+retries+'+retries+See+if+you+can+beat+it.+at&via='+twitter_name+'&url='+game_url+'&hashtags='+tags.join(','), '_blank');
 
 
